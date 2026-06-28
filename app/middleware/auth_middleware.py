@@ -25,10 +25,12 @@ def get_current_user(
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
     user = db.query(User).filter(User.user_id == user_id, User.is_active == True).first()  # noqa: E712
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
 
     return user

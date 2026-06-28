@@ -51,7 +51,8 @@ def create_refresh_token(user_id: str) -> str:
 def decode_token(token: str, expected_type: str = "access") -> str:
     """Decode and validate a JWT token. Returns user_id (sub)."""
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(token, settings.secret_key,
+                             algorithms=[settings.algorithm])
         user_id: str | None = payload.get("sub")
         token_type: str | None = payload.get("type")
 

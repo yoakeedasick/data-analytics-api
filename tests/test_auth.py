@@ -1,9 +1,6 @@
 """
 Unit tests for /auth/* endpoints.
 """
-import pytest
-from tests.conftest import client  # noqa: F401
-
 
 REGISTER_PAYLOAD = {
     "email": "test@example.com",
@@ -26,7 +23,8 @@ class TestRegister:
         assert "already registered" in response.json()["detail"].lower()
 
     def test_register_invalid_email(self, client):
-        response = client.post("/auth/register", json={"email": "not-an-email", "password": "pass"})
+        response = client.post(
+            "/auth/register", json={"email": "not-an-email", "password": "pass"})
         assert response.status_code == 422
 
 
@@ -66,12 +64,14 @@ class TestRefresh:
         })
         refresh_token = login_resp.json()["refresh_token"]
 
-        response = client.post("/auth/refresh", json={"refresh_token": refresh_token})
+        response = client.post(
+            "/auth/refresh", json={"refresh_token": refresh_token})
         assert response.status_code == 200
         assert "access_token" in response.json()
 
     def test_refresh_invalid_token(self, client):
-        response = client.post("/auth/refresh", json={"refresh_token": "invalid.token.here"})
+        response = client.post(
+            "/auth/refresh", json={"refresh_token": "invalid.token.here"})
         assert response.status_code == 401
 
 
@@ -84,7 +84,8 @@ class TestUpdateSettings:
         token = login_resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
-        resp = client.put("/auth/profile", json={"full_name": "Updated Name"}, headers=headers)
+        resp = client.put(
+            "/auth/profile", json={"full_name": "Updated Name"}, headers=headers)
         assert resp.status_code == 200
         assert resp.json()["full_name"] == "Updated Name"
 

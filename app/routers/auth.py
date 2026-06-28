@@ -57,7 +57,8 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
         )
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")
 
     return TokenResponse(
         access_token=create_access_token(str(user.user_id)),
@@ -71,9 +72,11 @@ def refresh(body: RefreshRequest, db: Session = Depends(get_db)):
     user_id_str = decode_token(body.refresh_token, expected_type="refresh")
 
     import uuid
-    user = db.query(User).filter(User.user_id == uuid.UUID(user_id_str)).first()
+    user = db.query(User).filter(
+        User.user_id == uuid.UUID(user_id_str)).first()
     if not user or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     return TokenResponse(
         access_token=create_access_token(user_id_str),

@@ -40,7 +40,8 @@ async def upload_file(
         )
 
     if len(file_bytes) == 0:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File is empty")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="File is empty")
 
     # Build S3 key
     file_id = uuid.uuid4()
@@ -78,9 +79,11 @@ def list_files(
     limit: int = 20,
 ):
     """List all files uploaded by the current user."""
-    query = db.query(FileModel).filter(FileModel.user_id == current_user.user_id)
+    query = db.query(FileModel).filter(
+        FileModel.user_id == current_user.user_id)
     total = query.count()
-    files = query.order_by(FileModel.upload_time.desc()).offset(skip).limit(limit).all()
+    files = query.order_by(FileModel.upload_time.desc()
+                           ).offset(skip).limit(limit).all()
 
     return FileListResponse(
         total=total,
@@ -110,7 +113,8 @@ def get_file(
     try:
         fid = uuid.UUID(file_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file_id format")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file_id format")
 
     db_file = (
         db.query(FileModel)
@@ -118,7 +122,8 @@ def get_file(
         .first()
     )
     if not db_file:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
     return FileResponse(
         file_id=str(db_file.file_id),
@@ -142,7 +147,8 @@ def delete_file(
     try:
         fid = uuid.UUID(file_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file_id format")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file_id format")
 
     db_file = (
         db.query(FileModel)
@@ -150,7 +156,8 @@ def delete_file(
         .first()
     )
     if not db_file:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
     s3_service.delete_file(db_file.s3_path)
     db.delete(db_file)
