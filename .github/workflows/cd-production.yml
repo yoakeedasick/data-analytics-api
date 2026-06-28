@@ -1,0 +1,112 @@
+name: CD — Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECS_CLUSTER: data-analytics-prod
+  ECS_SERVICE: backend-service
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy-production:
+    name: Deploy to ECS Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production          # Requires manual reviewer approval in GitHub
+      url: ${{ secrets.PROD_API_URL }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ── Save previous task definition for rollback ────────────────────────────
+      - name: Save previous task definition revision
+        id: prev-task-def
+        run: |
+          PREV=$(aws ecs describe-services \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --query 'services[0].taskDefinition' \
+            --output text)
+          echo "previous_task_def=$PREV" >> $GITHUB_OUTPUT
+
+      # ── Prepare new task definition ───────────────────────────────────────────
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition data-analytics-backend-production \
+            --query taskDefinition > task-definition.json
+
+      - name: Fill in new image ID
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: backend
+          image: ${{ steps.login-ecr.outputs.registry }}/data-analytics-api:${{ env.IMAGE_TAG }}
+
+      # ── Rolling deployment ────────────────────────────────────────────────────
+      - name: Deploy to ECS Production (rolling, zero-downtime)
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      # ── Health check ──────────────────────────────────────────────────────────
+      - name: Health check production
+        id: healthcheck
+        run: |
+          PROD_URL="${{ secrets.PROD_API_URL }}"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/health")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Production health check passed (attempt $i)"
+              exit 0
+            fi
+            echo "Attempt $i: status=$STATUS — retrying in 15s..."
+            sleep 15
+          done
+          echo "❌ Production health check failed"
+          exit 1
+
+      # ── Automatic rollback on failure ─────────────────────────────────────────
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "🔁 Rolling back to ${{ steps.prev-task-def.outputs.previous_task_def }}..."
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --task-definition "${{ steps.prev-task-def.outputs.previous_task_def }}"
+
+          aws ecs wait services-stable \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE
+
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK }}" \
+            -H "Content-type: application/json" \
+            -d "{\"text\": \"🔴 Production deploy FAILED — rolled back to previous revision. SHA: \`${{ github.sha }}\`\"}"
+
+      # ── Notify success ────────────────────────────────────────────────────────
+      - name: Notify Slack — production deploy success
+        if: success()
+        run: |
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK }}" \
+            -H "Content-type: application/json" \
+            -d "{\"text\": \"🚀 *Production* deploy succeeded — \`${{ github.sha }}\` by @${{ github.actor }}\"}"

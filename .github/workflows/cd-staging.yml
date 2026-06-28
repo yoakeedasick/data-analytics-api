@@ -1,0 +1,89 @@
+name: CD — Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECS_CLUSTER: data-analytics-staging
+  ECS_SERVICE: backend-service
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to ECS Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: []   # runs independently; CI must pass first in branch protection
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ── Download current task definition ─────────────────────────────────────
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition data-analytics-backend-staging \
+            --query taskDefinition > task-definition.json
+
+      # ── Update task def with new image ────────────────────────────────────────
+      - name: Fill in new image ID in task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: backend
+          image: ${{ steps.login-ecr.outputs.registry }}/data-analytics-api:${{ env.IMAGE_TAG }}
+
+      # ── Deploy to ECS ────────────────────────────────────────────────────────
+      - name: Deploy to ECS Staging
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      # ── Smoke test ───────────────────────────────────────────────────────────
+      - name: Smoke test — health check
+        run: |
+          STAGING_URL="${{ secrets.STAGING_API_URL }}"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL/health")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Staging health check passed (attempt $i)"
+              exit 0
+            fi
+            echo "Attempt $i: status=$STATUS — retrying in 15s..."
+            sleep 15
+          done
+          echo "❌ Staging health check failed after 10 attempts"
+          exit 1
+
+      # ── Notify success ────────────────────────────────────────────────────────
+      - name: Notify Slack — staging deploy success
+        if: success()
+        run: |
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK }}" \
+            -H "Content-type: application/json" \
+            -d "{\"text\": \"✅ *Staging* deploy succeeded — \`${{ github.sha }}\` by @${{ github.actor }}\"}"
+
+      - name: Notify Slack — staging deploy failed
+        if: failure()
+        run: |
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK }}" \
+            -H "Content-type: application/json" \
+            -d "{\"text\": \"🔴 *Staging* deploy FAILED — \`${{ github.sha }}\`\"}"

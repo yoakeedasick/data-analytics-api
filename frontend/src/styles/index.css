@@ -1,0 +1,196 @@
+/* ================================================
+   DALYTICS — Design System | Beige Minimalist Theme
+   ================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── Design Tokens ─────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-base:     #EDE8DF;
+  --bg-surface:  #F5F1EA;
+  --bg-card:     #FAF7F2;
+  --bg-hover:    #E5DFD5;
+  --bg-active:   #DDD7CC;
+
+  /* Accent — deep earthy brown matching Figma */
+  --accent:        #6A513E;
+  --accent-light:  #A88B72;
+  --accent-dark:   #4E3B2D;
+  --accent-subtle: rgba(106, 81, 62, 0.08);
+
+  /* Text */
+  --text-primary:   #2C2520;
+  --text-secondary: #8A7E74;
+  --text-muted:     #B8AFA5;
+  --text-on-accent: #FAF7F2;
+
+  /* Border */
+  --border:       #DDD7CC;
+  --border-focus: #6A513E;
+
+  /* Status — matching Figma pills exactly */
+  --success:        #3B7A57;
+  --success-bg:     #E8F4ED;
+  --warning:        #A0692A;
+  --warning-bg:     #FDF0DC;
+  --error:          #9B3535;
+  --error-bg:       #FAE8E8;
+  --pending:        #6B7280;
+  --pending-bg:     #F0F0EE;
+
+  /* Shadow */
+  --shadow-sm:  0 1px 3px rgba(44, 37, 32, 0.06);
+  --shadow-md:  0 4px 16px rgba(44, 37, 32, 0.08);
+  --shadow-lg:  0 8px 32px rgba(44, 37, 32, 0.10);
+
+  /* Layout */
+  --sidebar-width:    220px;
+  --topbar-height:    60px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+
+  /* Typography */
+  --font-serif:  'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans:   'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono:   'JetBrains Mono', 'Courier New', monospace;
+
+  /* Transitions */
+  --transition-fast:   120ms ease;
+  --transition-normal: 220ms ease;
+  --transition-slow:   380ms ease;
+}
+
+body.sidebar-collapsed {
+  --sidebar-width: 72px;
+}
+
+/* ─── Reset ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover { color: var(--accent-dark); }
+
+img, svg { display: block; max-width: 100%; }
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+ul, ol { list-style: none; }
+
+/* ─── Typography ─────────────────────────────────── */
+h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; line-height: 1.2; }
+h4, h5, h6 { font-family: var(--font-sans);  font-weight: 600; line-height: 1.35; }
+
+/* ─── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-light); }
+
+/* ─── Skeleton Loading ─────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -800px 0; }
+  100% { background-position:  800px 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-hover) 25%,
+    var(--bg-card)  50%,
+    var(--bg-hover) 75%
+  );
+  background-size: 1600px 100%;
+  animation: shimmer 1.6s ease infinite;
+  border-radius: var(--border-radius-sm);
+}
+
+/* ─── Page Fade-in ─────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: fadeSlideUp 0.3s ease both;
+}
+
+/* ─── App Layout ─────────────────────────────────── */
+#root {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ─── Shared Button Styles ────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+  padding: 0.5rem 1.125rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: var(--text-on-accent); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent-light);
+}
+.btn-outline:hover { background: var(--accent-subtle); border-color: var(--accent); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--error);
+  border-color: transparent;
+}
+.btn-danger:hover { background: var(--error-bg); }
+
+.btn-lg { padding: 0.75rem 1.5rem; font-size: 0.9375rem; }
+.btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
