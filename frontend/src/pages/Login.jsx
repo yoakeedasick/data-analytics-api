@@ -29,14 +29,14 @@ export default function Login() {
       if (isRegister) {
         // Register user
         await register(form.email, form.password, form.fullName);
-        // Automatically login user after registration
-        await login(form.email, form.password);
+        // Redirect to OTP verification screen passing the email state
+        navigate('/verify-otp', { state: { email: form.email } });
       } else {
         // Log in user
         await login(form.email, form.password);
+        // Redirect to dashboard
+        navigate('/dashboard');
       }
-      // Redirect to dashboard
-      navigate('/dashboard');
     } catch (err) {
       const errMsg = err.response?.data?.detail || 'An authentication error occurred.';
       setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
@@ -118,7 +118,7 @@ export default function Login() {
             <Link to="/" className="login-back-home-link">
               ← Back to Home
             </Link>
-            {!isRegister && <a href="#" className="login-forgot-link">Forgot password?</a>}
+            {!isRegister && <Link to="/forgot-password" className="login-forgot-link">Forgot password?</Link>}
           </div>
 
           {error && <p className="login-error-msg">{error}</p>}

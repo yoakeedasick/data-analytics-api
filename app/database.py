@@ -15,7 +15,8 @@ def _get_engine():
             pool_size=10,
             max_overflow=20,
         )
-        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+        _SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=_engine)
     return _engine
 
 

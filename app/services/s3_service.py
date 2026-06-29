@@ -1,4 +1,3 @@
-import io
 import boto3
 from botocore.exceptions import ClientError
 from fastapi import HTTPException, status
@@ -43,12 +42,14 @@ def download_file(s3_key: str) -> bytes:
     """
     client = _get_client()
     try:
-        response = client.get_object(Bucket=settings.s3_bucket_name, Key=s3_key)
+        response = client.get_object(
+            Bucket=settings.s3_bucket_name, Key=s3_key)
         return response["Body"].read()
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
         if error_code == "NoSuchKey":
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in S3")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="File not found in S3")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"S3 download failed: {e.response['Error']['Message']}",

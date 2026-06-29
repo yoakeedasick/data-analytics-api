@@ -3,6 +3,7 @@ import pytest
 from app.models.file import File, AnalysisResult
 from tests.conftest import TestingSessionLocal
 
+
 @pytest.fixture(scope="module")
 def auth_header(client):
     # Register & login a test user
@@ -12,6 +13,18 @@ def auth_header(client):
         "fullName": "Test PDF User"
     }
     client.post("/auth/register", json=user_data)
+
+    # Verify user
+    from app.models.user import User
+    db = TestingSessionLocal()
+    try:
+        user = db.query(User).filter(User.email == "testpdf@example.com").first()
+        if user:
+            user.is_verified = True
+            db.commit()
+    finally:
+        db.close()
+
     login_resp = client.post("/auth/login", json={
         "email": "testpdf@example.com",
         "password": "securepassword"
@@ -19,16 +32,18 @@ def auth_header(client):
     token = login_resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
+
 def test_export_pdf_not_found(client, auth_header):
     fake_id = str(uuid.uuid4())
     resp = client.get(f"/analysis/{fake_id}/export", headers=auth_header)
     assert resp.status_code == 404
 
+
 def test_export_pdf_not_done(client, auth_header):
     db = TestingSessionLocal()
     from app.models.user import User
     user = db.query(User).filter(User.email == "testpdf@example.com").first()
-    
+
     # Create a pending file record
     pending_file = File(
         user_id=user.user_id,
@@ -41,16 +56,17 @@ def test_export_pdf_not_done(client, auth_header):
     db.commit()
     file_id = str(pending_file.file_id)
     db.close()
-    
+
     resp = client.get(f"/analysis/{file_id}/export", headers=auth_header)
     assert resp.status_code == 400
     assert "Analysis is not complete" in resp.json()["detail"]
+
 
 def test_export_pdf_success(client, auth_header):
     db = TestingSessionLocal()
     from app.models.user import User
     user = db.query(User).filter(User.email == "testpdf@example.com").first()
-    
+
     # Create a completed file record and a dummy analysis result entry
     done_file = File(
         user_id=user.user_id,
@@ -63,7 +79,7 @@ def test_export_pdf_success(client, auth_header):
     )
     db.add(done_file)
     db.commit()
-    
+
     dummy_result = AnalysisResult(
         file_id=done_file.file_id,
         result_json={
@@ -83,7 +99,7 @@ def test_export_pdf_success(client, auth_header):
     db.commit()
     file_id = str(done_file.file_id)
     db.close()
-    
+
     resp = client.get(f"/analysis/{file_id}/export", headers=auth_header)
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/pdf"

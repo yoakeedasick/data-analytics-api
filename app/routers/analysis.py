@@ -19,7 +19,8 @@ def _get_file_for_user(file_id: str, user_id: uuid.UUID, db: Session) -> FileMod
     try:
         fid = uuid.UUID(file_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file_id format")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file_id format")
 
     db_file = (
         db.query(FileModel)
@@ -27,7 +28,8 @@ def _get_file_for_user(file_id: str, user_id: uuid.UUID, db: Session) -> FileMod
         .first()
     )
     if not db_file:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     return db_file
 
 
@@ -67,7 +69,8 @@ def run_analysis(
         db_file.status = "done"
 
         # Upsert analysis result
-        existing = db.query(AnalysisResult).filter(AnalysisResult.file_id == db_file.file_id).first()
+        existing = db.query(AnalysisResult).filter(
+            AnalysisResult.file_id == db_file.file_id).first()
         if existing:
             existing.result_json = result
         else:
@@ -117,7 +120,8 @@ def get_analysis(
         .first()
     )
     if not result_record:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis result not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Analysis result not found")
 
     data = result_record.result_json or {}
     return AnalysisResponse(
@@ -178,4 +182,3 @@ def export_analysis_pdf(
             "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )
-
