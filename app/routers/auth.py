@@ -148,10 +148,6 @@ def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
         send_otp_email(user.email, otp_code)
     except Exception as e:
         print(f"Error sending verification email to {user.email}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send email verification code",
-        )
 
     return {"message": "Verification code resent successfully"}
 
