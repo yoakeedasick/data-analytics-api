@@ -55,6 +55,7 @@ def send_otp_email(email: str, otp_code: str) -> None:
         )
     except ClientError as e:
         print(f"Error sending email: {e.response['Error']['Message']}")
+        print(f"\n--- [DEVELOPMENT ONLY] OTP Code for {email} is: {otp_code} ---\n")
         raise e
 
 
@@ -110,4 +111,5 @@ def send_reset_otp_email(email: str, otp_code: str) -> None:
         )
     except ClientError as e:
         print(f"Error sending email: {e.response['Error']['Message']}")
+        print(f"\n--- [DEVELOPMENT ONLY] OTP Code for {email} is: {otp_code} ---\n")
         raise e
