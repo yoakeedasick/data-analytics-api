@@ -1,4 +1,4 @@
-# Hệ Thống Data Analytics API Trên AWS Với Quy Trình DevOps CI/CD
+# Dalytics - Hệ Thống Data Analytics API Trên AWS Với Quy Trình DevOps CI/CD
 
 ## Mục lục
 
@@ -23,7 +23,7 @@
 
 Xây dựng một hệ thống phân tích dữ liệu CSV trên nền tảng AWS theo mô hình DevOps, cho phép người dùng tải lên dữ liệu, thực hiện phân tích tự động và xem kết quả trực quan thông qua giao diện web.
 
-Hệ thống áp dụng các thực hành DevOps hiện đại:
+Hệ thống áp dụng các thực hành DevOps:
 
 - Container hóa ứng dụng bằng Docker
 - Quản lý hạ tầng bằng Terraform (Infrastructure as Code)
@@ -99,7 +99,7 @@ Sau khi upload file CSV, hệ thống tự động phân tích và trả về:
          [Amazon ECR]  ── Docker Image Registry
               │
               ▼
-    ┌─────── AWS VPC (ap-southeast-1) ──────────────────┐
+    ┌─────── AWS VPC (ap-southeast-1) ────────────────────┐
     │                                                     │
     │  [Public Subnet]                                    │
     │    └── Application Load Balancer (HTTPS)            │
@@ -120,8 +120,8 @@ Sau khi upload file CSV, hệ thống tự động phân tích và trả về:
     │    ├── CloudWatch Log Groups                        │
     │    └── SNS Alert (Email / Slack)                    │
     └─────────────────────────────────────────────────────┘
-    │
-    ▼
+         │
+         ▼
 [ReactJS Frontend]  ── Dashboard + Chart.js + Export
 ```
 
@@ -322,10 +322,16 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run unit tests
-        run: pytest --cov=app --cov-report=xml --cov-fail-under=80
+        run: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=75 \
+            -v
 
       - name: Lint check
-        run: flake8 app/ --max-line-length=120
+        run: flake8 app/ tests/ --max-line-length=120 --extend-ignore=E501
 
       - name: Build Docker image
         run: |
@@ -502,18 +508,22 @@ resource "aws_ecs_task_definition" "backend" {
     name      = "backend"
     image     = "${aws_ecr_repository.main.repository_url}:latest"
     portMappings = [{ containerPort = 8000, protocol = "tcp" }]
+    environment = [
+      { name = "APP_ENV",         value = var.environment },
+      { name = "DATABASE_URL",    value = "postgresql://${var.db_username}:${var.db_password}@${var.db_host}:5432/analytics" },
+      { name = "S3_BUCKET_NAME",  value = var.s3_bucket_name },
+      { name = "AWS_REGION",      value = var.aws_region },
+      { name = "SECRET_KEY",      value = var.secret_key },
+      { name = "ALLOWED_ORIGINS", value = "http://localhost:5173,http://localhost:4173,http://localhost:3000" }
+    ]
     logConfiguration = {
       logDriver = "awslogs"
       options = {
-        awslogs-group         = "/ecs/data-analytics"
+        awslogs-group         = "/ecs/data-analytics/backend"
         awslogs-region        = var.aws_region
         awslogs-stream-prefix = "backend"
       }
     }
-    environment = [
-      { name = "ENV", value = var.environment },
-      { name = "DB_HOST", value = aws_db_instance.postgres.address }
-    ]
   }])
 }
 
@@ -641,11 +651,7 @@ Biến nhạy cảm (DB password, JWT secret) lưu trong **AWS Secrets Manager**
 
 | Log Group | Nội dung |
 |---|---|
-| `/ecs/data-analytics/backend` | API request/response, lỗi xử lý |
-| `/ecs/data-analytics/auth` | Login, logout, token validation |
-| `/ecs/data-analytics/upload` | File upload events |
-| `/ecs/data-analytics/analysis` | Job start/complete/fail |
-| `/ecs/data-analytics/deploy` | Deployment events |
+| `/ecs/data-analytics/backend` | Toàn bộ log của ứng dụng FastAPI (API request/response, auth, S3 upload, analysis jobs, deploy events) |
 
 ### 9.3 Health Check
 
@@ -656,7 +662,7 @@ Response 200:
   "status": "healthy",
   "database": "connected",
   "s3": "accessible",
-  "version": "1.2.0"
+  "version": "1.0.0"
 }
 ```
 

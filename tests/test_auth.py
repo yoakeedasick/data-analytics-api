@@ -1,6 +1,5 @@
-"""
-Unit tests for /auth/* endpoints.
-"""
+from tests.conftest import TestingSessionLocal
+from app.models.user import User
 
 REGISTER_PAYLOAD = {
     "email": "test@example.com",
@@ -9,13 +8,64 @@ REGISTER_PAYLOAD = {
 }
 
 
+def verify_user_in_db(email: str):
+    db = TestingSessionLocal()
+    try:
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            user.is_verified = True
+            user.otp_code = None
+            user.otp_expires_at = None
+            db.commit()
+    finally:
+        db.close()
+
+
 class TestRegister:
     def test_register_success(self, client):
         response = client.post("/auth/register", json=REGISTER_PAYLOAD)
         assert response.status_code == 201
         data = response.json()
         assert data["email"] == REGISTER_PAYLOAD["email"]
-        assert "user_id" in data
+        assert "message" in data
+        assert "verification" in data["message"].lower()
+
+    def test_verify_otp_success(self, client):
+        # Fetch OTP code from DB
+        db = TestingSessionLocal()
+        try:
+            user = db.query(User).filter(User.email == REGISTER_PAYLOAD["email"]).first()
+            otp = user.otp_code
+        finally:
+            db.close()
+
+        resp = client.post("/auth/verify-otp", json={
+            "email": REGISTER_PAYLOAD["email"],
+            "otp_code": otp
+        })
+        assert resp.status_code == 200
+        assert "verified" in resp.json()["message"].lower()
+
+    def test_verify_otp_wrong_code(self, client):
+        db = TestingSessionLocal()
+        try:
+            user = db.query(User).filter(User.email == REGISTER_PAYLOAD["email"]).first()
+            if user:
+                user.is_verified = False
+                user.otp_code = "123456"
+                db.commit()
+        finally:
+            db.close()
+
+        resp = client.post("/auth/verify-otp", json={
+            "email": REGISTER_PAYLOAD["email"],
+            "otp_code": "000000"
+        })
+        assert resp.status_code == 400
+        assert "invalid" in resp.json()["detail"].lower()
+
+        # Restore verification state so other tests proceed
+        verify_user_in_db(REGISTER_PAYLOAD["email"])
 
     def test_register_duplicate_email(self, client):
         response = client.post("/auth/register", json=REGISTER_PAYLOAD)
@@ -29,6 +79,20 @@ class TestRegister:
 
 
 class TestLogin:
+    def test_login_unverified_user(self, client):
+        email = "unverified@example.com"
+        client.post("/auth/register", json={
+            "email": email,
+            "password": "password123",
+            "full_name": "Unverified User"
+        })
+        resp = client.post("/auth/login", json={
+            "email": email,
+            "password": "password123"
+        })
+        assert resp.status_code == 403
+        assert "not verified" in resp.json()["detail"].lower()
+
     def test_login_success(self, client):
         response = client.post("/auth/login", json={
             "email": REGISTER_PAYLOAD["email"],
@@ -117,6 +181,7 @@ class TestUpdateSettings:
             "password": "password123",
             "fullName": "Me User"
         })
+        verify_user_in_db(email)
         login_resp = client.post("/auth/login", json={
             "email": email,
             "password": "password123",
@@ -127,3 +192,57 @@ class TestUpdateSettings:
         resp = client.get("/auth/me", headers=headers)
         assert resp.status_code == 200
         assert resp.json()["email"] == email
+
+
+class TestForgotPassword:
+    def test_forgot_password_success(self, client):
+        email = "forgot@example.com"
+        client.post("/auth/register", json={
+            "email": email,
+            "password": "oldpassword",
+            "full_name": "Forgot User"
+        })
+        verify_user_in_db(email)
+
+        # Trigger forgot password
+        resp = client.post("/auth/forgot-password", json={"email": email})
+        assert resp.status_code == 200
+        assert "verification" in resp.json()["message"].lower()
+
+        # Fetch OTP code from DB
+        db = TestingSessionLocal()
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            otp = user.otp_code
+        finally:
+            db.close()
+
+        # Reset password with correct OTP code
+        resp = client.post("/auth/reset-password", json={
+            "email": email,
+            "otp_code": otp,
+            "new_password": "newsuperpassword"
+        })
+        assert resp.status_code == 200
+        assert "success" in resp.json()["message"].lower()
+
+        # Login with new password
+        login_resp = client.post("/auth/login", json={
+            "email": email,
+            "password": "newsuperpassword"
+        })
+        assert login_resp.status_code == 200
+
+    def test_forgot_password_nonexistent_email(self, client):
+        resp = client.post("/auth/forgot-password", json={"email": "nobody_exists@example.com"})
+        assert resp.status_code == 404
+
+    def test_reset_password_invalid_otp(self, client):
+        email = "forgot@example.com"
+        resp = client.post("/auth/reset-password", json={
+            "email": email,
+            "otp_code": "000000",
+            "new_password": "somepassword"
+        })
+        assert resp.status_code == 400
+        assert "invalid" in resp.json()["detail"].lower()

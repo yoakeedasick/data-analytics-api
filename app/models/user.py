@@ -20,6 +20,11 @@ class User(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     is_active: Mapped[bool] = mapped_column(default=True)
+    is_verified: Mapped[bool] = mapped_column(default=False)
+    otp_code: Mapped[str | None] = mapped_column(String(6), nullable=True)
+    otp_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     def __repr__(self) -> str:
         return f"<User email={self.email}>"

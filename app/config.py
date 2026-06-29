@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     aws_secret_access_key: str = ""
     aws_region: str = "ap-southeast-1"
     s3_bucket_name: str = "data-analytics-bucket"
+    sender_email: str = "vquyenit1710@gmail.com"
 
     # CORS
     allowed_origins: str = "http://localhost:5173"

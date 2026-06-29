@@ -10,6 +10,9 @@ import Upload   from './pages/Upload';
 import Files     from './pages/Files';
 import Analysis from './pages/Analysis';
 import Settings from './pages/Settings';
+import VerifyOTP from './pages/VerifyOTP';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Route guards
 function ProtectedRoute({ children }) {
@@ -41,6 +44,30 @@ export default function App() {
             element={
               <PublicRoute>
                 <Login />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/verify-otp"  
+            element={
+              <PublicRoute>
+                <VerifyOTP />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/forgot-password"  
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/reset-password"  
+            element={
+              <PublicRoute>
+                <ResetPassword />
               </PublicRoute>
             } 
           />

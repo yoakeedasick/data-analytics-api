@@ -39,3 +39,27 @@ class UpdateProfileRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class RegisterResponse(BaseModel):
+    message: str
+    email: EmailStr
+
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+    new_password: str

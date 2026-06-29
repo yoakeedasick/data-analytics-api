@@ -1,0 +1,77 @@
+.otp-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: -1rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.otp-message strong {
+  color: var(--text-primary);
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.otp-input-field {
+  width: 3rem;
+  height: 3.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.otp-input-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(106, 81, 62, 0.15);
+}
+
+.otp-resend-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.otp-resend-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.otp-resend-btn:hover {
+  color: #4a382b;
+}
+
+.otp-resend-btn:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.login-success-msg {
+  font-size: 0.75rem;
+  color: #1b5e20;
+  background: #e8f5e9;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 0.5rem;
+}

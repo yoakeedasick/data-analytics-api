@@ -13,6 +13,18 @@ def auth_header(client):
         "fullName": "Test PDF User"
     }
     client.post("/auth/register", json=user_data)
+
+    # Verify user
+    from app.models.user import User
+    db = TestingSessionLocal()
+    try:
+        user = db.query(User).filter(User.email == "testpdf@example.com").first()
+        if user:
+            user.is_verified = True
+            db.commit()
+    finally:
+        db.close()
+
     login_resp = client.post("/auth/login", json={
         "email": "testpdf@example.com",
         "password": "securepassword"
