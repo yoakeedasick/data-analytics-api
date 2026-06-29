@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../services/api';
 import logoImg from '../assets/logo/logo.png';
-import lockIconImg from '../assets/icons/lock.svg';
+import lockIconImg from '../assets/login/password.png';
 import './Login.css';
 import './VerifyOTP.css';
 import './ResetPassword.css';

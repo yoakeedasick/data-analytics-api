@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import logoImg from '../assets/logo/logo.png';
-import mailIconImg from '../assets/icons/mail.svg';
+import mailIconImg from '../assets/login/email.png';
 import './Login.css';
 import './ForgotPassword.css';
 
