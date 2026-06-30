@@ -113,6 +113,11 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
         Effect   = "Allow"
         Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "arn:aws:logs:*:*:log-group:/ecs/data-analytics*:*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["ses:SendEmail", "ses:SendRawEmail"]
+        Resource = "*"
       }
     ]
   })

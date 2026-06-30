@@ -8,7 +8,7 @@ Create Date: 2026-06-26
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 
 revision: str = "0001"
 down_revision: Union[str, None] = None
@@ -20,7 +20,7 @@ def upgrade() -> None:
     # ── users ─────────────────────────────────────────────────────────────────
     op.create_table(
         "users",
-        sa.Column("user_id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("user_id", sa.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("email", sa.String(255), nullable=False, unique=True),
         sa.Column("hashed_password", sa.String(255), nullable=False),
         sa.Column("full_name", sa.String(255), nullable=True),
@@ -32,8 +32,8 @@ def upgrade() -> None:
     # ── files ─────────────────────────────────────────────────────────────────
     op.create_table(
         "files",
-        sa.Column("file_id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("user_id", UUID(as_uuid=True), sa.ForeignKey("users.user_id"), nullable=False),
+        sa.Column("file_id", sa.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("user_id", sa.UUID(as_uuid=True), sa.ForeignKey("users.user_id"), nullable=False),
         sa.Column("file_name", sa.String(255), nullable=False),
         sa.Column("s3_path", sa.Text, nullable=False),
         sa.Column("upload_time", sa.DateTime(timezone=True), server_default=sa.text("NOW()")),
@@ -47,9 +47,9 @@ def upgrade() -> None:
     # ── analysis_results ──────────────────────────────────────────────────────
     op.create_table(
         "analysis_results",
-        sa.Column("result_id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("file_id", UUID(as_uuid=True), sa.ForeignKey("files.file_id"), nullable=False, unique=True),
-        sa.Column("result_json", JSONB, nullable=True),
+        sa.Column("result_id", sa.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("file_id", sa.UUID(as_uuid=True), sa.ForeignKey("files.file_id"), nullable=False, unique=True),
+        sa.Column("result_json", sa.JSON, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()")),
     )
     op.create_index("ix_analysis_results_file_id", "analysis_results", ["file_id"], unique=True)
