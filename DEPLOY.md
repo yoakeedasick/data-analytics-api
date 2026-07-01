@@ -43,7 +43,7 @@ Màn hình console sẽ hiển thị các giá trị đầu ra (Outputs). Hãy l
 ---
 
 ### Bước 4: Cấu hình biến môi trường Frontend
-1. Mở tệp `frontend/.env` ở máy cục bộ của bạn.
+1. Mở tệp `frontend/.env`.
 2. Cập nhật địa chỉ `VITE_API_URL` bằng địa chỉ `alb_dns_name` vừa nhận được:
    ```text
    VITE_API_URL=http://data-analytics-alb-staging-XXXXXXXXXX.ap-southeast-1.elb.amazonaws.com
@@ -98,7 +98,7 @@ Truy cập vào AWS Web Console để kiểm tra xem các tài nguyên tốn chi
 ## IV. Xử Lý Sự Cố Với AWS SES (Sandbox Mode)
 Vì tài khoản AWS SES mặc định nằm trong hộp cát (Sandbox), việc gửi mã OTP đăng ký / quên mật khẩu cần tuân thủ:
 
-1. **Email Gửi (Sender)**: Phải là `vquyenit1710@gmail.com` (Đã xác minh thành công).
+1. **Email Gửi (Sender)**: Phải là email đã xác minh thành công.
 2. **Email Nhận (Receiver)**: 
    * **Trong Sandbox**: Phải được xác minh thủ công trên AWS SES (nhấn **Create identity** > nhập email nhận > bấm link xác nhận gửi vào hòm thư đó).
    * **Trong Production (Mọi email)**: Cần tạo yêu cầu hỗ trợ **Sandbox Removal / Service Limit Increase** trên dịch vụ **Service Quotas** của AWS (khu vực Singapore) để nâng cấp tài khoản của bạn lên bản Production. Sau khi được duyệt (thường dưới 24h), bạn có thể gửi OTP cho bất kỳ ai!
