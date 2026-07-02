@@ -1,5 +1,3 @@
-<![CDATA[<div align="center">
-
 # Dalytics — Data Analytics API
 
 **Nền tảng phân tích dữ liệu CSV trên AWS với quy trình DevOps CI/CD**
@@ -824,7 +822,3 @@ Dự án này được phát triển cho mục đích học tập và demo — m
 
 ---
 
-<div align="center">
-  <strong>Dalytics</strong> — Built with using FastAPI, React & AWS
-</div>
-]]>
