@@ -1,5 +1,3 @@
-<![CDATA[<div align="center">
-
 # Dalytics — Data Analytics API
 
 **Nền tảng phân tích dữ liệu CSV trên AWS với quy trình DevOps CI/CD**
@@ -823,8 +821,3 @@ Thư mục `data-test/` chứa các file CSV/XLSX mẫu để kiểm thử
 Dự án này được phát triển cho mục đích học tập và demo — môn Điện Toán Đám Mây.
 
 ---
-
-<div align="center">
-  <strong>Dalytics</strong> — Built with using FastAPI, React & AWS
-</div>
-]]>
