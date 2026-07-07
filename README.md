@@ -944,6 +944,4 @@ Thư mục `data-test/` chứa các file CSV/XLSX mẫu để kiểm thử:
 
 Dự án này được phát triển cho mục đích học tập và demo — môn Điện Toán Đám Mây.
 
----
-
 **Dalytics** — Built with FastAPI, React & AWS
